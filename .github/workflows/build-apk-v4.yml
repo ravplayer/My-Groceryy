@@ -1,0 +1,49 @@
+name: Build My Market APK v4
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extract project
+        run: unzip My-Market-Android-Project-v4.zip -d source
+
+      - name: Build APK
+        working-directory: source/MyMarketAndroid
+        run: gradle assembleDebug
+
+      - name: Verify APK exists
+        run: find source -name "*.apk" -type f
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: My-Market-APK-v4
+          path: source/MyMarketAndroid/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
